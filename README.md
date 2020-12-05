@@ -1,2 +1,2 @@
 # Etiquetador de noticias
-Auditor de transparencia informativa en medos digitales
+Auditor de transparencia informativa en medios digitales
