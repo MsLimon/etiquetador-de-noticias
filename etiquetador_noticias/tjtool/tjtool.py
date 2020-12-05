@@ -324,9 +324,7 @@ class SpacyReporterExtractor(object):
 
         for s in sentences:
             s_str = s.string
-            sent_nlp = self.nlp(s_str)
-            text = s_str
-            
+            sent_nlp = self.nlp(s_str)           
             verb = search('RPTVRB|según',s)[0].string
             shortest_dist = np.inf
             shortest_word = []
@@ -406,33 +404,3 @@ class SpacyReporterExtractor(object):
         """Return sources (list): the list of identified well-known sources
         """
         return self._pack_list(self.__sources)
-
-class Entities(object):
-    """This class manage the translation between usual names and their
-    corresponding entities' full name.
-    """
-
-    def __init__(self):
-        csvfile_name = os.path.join(this_dir, "data", "entities.csv")
-        with open(csvfile_name) as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=',')
-            self._entities_dict = {row['Entity'].lower():row
-                                   for row in reader}
-
-    def getFullName(self, name):
-        if (name.lower() in list(self._entities_dict.keys()) and
-            self._entities_dict[name.lower()]['FullName']):
-                return self._entities_dict[name.lower()]['FullName']
-        else:
-            return name
-
-    def getType(self, name):
-        if name.lower() in list(self._entities_dict.keys()):
-            return self._entities_dict[name.lower()]['Type']
-        else:
-            return None
-
-    def getFullDescription(self, name):
-        return {'name': name,
-                'fullname': self.getFullName(name),
-                'type':self.getType(name)}
