@@ -1,3 +1,4 @@
+import os
 import spacy
 from spacy import displacy
 from collections import Counter
@@ -5,18 +6,44 @@ import es_core_news_md
 import nltk
 nltk.download('punkt')
 from newspaper import Article
-
+import pkg_resources
 import pandas as pd
 import numpy as np
 import re
 from bs4 import BeautifulSoup
-from tjtool import ReporterExtractor, SpacyReporterExtractor, Entities
+from etiquetador_noticias.tjtool import ReporterExtractor, SpacyReporterExtractor, Entities
 
+this_dir, this_filename = os.path.split(__file__)
 
 class Analyser():
+    """Auditor de transparencia informativa en medios digitales
+
+
+    Parameters
+    ----------
+    url : str
+        The url to the article to be analysed and labelled
+    variant : str, optional
+        The variant of the tree used to classify the article. Allowed values are "seria" or "gamberra" (default is "seria")
+    Returns
+    -------
+    Full report in text form
+        
+    Examples
+    --------
+    >>> from etiquetador_noticias.analyser import Analyser
+    >>> url = "https://www.article_url"
+    >>> Analyser(url)
+    """
     __has_data = False # to avoid load the data once and again
-    def __init__(self, url):
+    def __init__(self, url, variant="seria"):
+        # inputs
         self.url = url
+        if not isinstance(variant, str):
+            raise TypeError("""The parameter 'variant' of the tree must be a string containing 
+                the name of the  desired variant. Allowed values are "seria" or "gamberra".""")
+        self.variant = variant
+        # load spanish model
         self._nlp = es_core_news_md.load()
         # load data
         self._load_data()
@@ -44,7 +71,8 @@ class Analyser():
         """Cargar los datos necesarios.
         """
         if not self.__has_data:
-            self.df_fin = pd.read_excel("data/tabla_de_inversores_y_grandes_anunciantes.xlsx")
+            table_file = os.path.join(this_dir, "data", "tabla_de_inversores_y_grandes_anunciantes.xlsx")
+            self.df_fin = pd.read_excel(table_file)
             self.df_url_media = self.df_fin[["media_name","media_url"]].drop_duplicates()
             self.__has_data = True
 
@@ -73,7 +101,6 @@ class Analyser():
         """
         extractor = ReporterExtractor()
         translate = Entities()
-        # TODO - problemas con entidades repetidas
         extractor.parse(self.article.text)
         self.reporters = extractor.get_reporters()
         self.entities = extractor.get_entities()
@@ -118,13 +145,12 @@ class Analyser():
     def get_category(self):
         # si tiene publicidad explicita es publicidad
         if self.pat:
-            # si tiene menos de dos fuentes pero habla de un inversor o gran anunciante es publicidad encubierta
+            # si tiene un indicador de patrocinio y contiene publicidad en el texto es publicidad
             if self.pub_text:
                 self.category = "Publicidad"
-            # si tiene menos de dos fuentes pero NO habla de un inversor o gran anunciante es contenido parcial
+            # si tiene un indicador de patrocinio y no contiene publicidad en el texto es contenido patrocinado
             else:
                 self.category = "Contenido Patrocinado"
-#             self.category = "Publicidad"
         # si no tiene publicidad explicita....
         else:
             if self.num_total_sources > 2:

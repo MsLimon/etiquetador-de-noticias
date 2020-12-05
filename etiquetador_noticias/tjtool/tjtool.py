@@ -1,9 +1,11 @@
 import os
 import sys
+import pkg_resources
 import codecs
 import csv
 import json
 import argparse
+import numpy as np
 from itertools import groupby
 from operator import itemgetter
 from pattern.es import parsetree
@@ -13,7 +15,10 @@ import spacy
 import es_core_news_md
 import nltk
 nltk.download('punkt')
-import numpy as np
+
+
+this_dir, this_filename = os.path.split(__file__)
+
 
 class ReporterExtractor(object):
     """ This class is in charge of parsing the sentences and extracting the
@@ -44,14 +49,22 @@ class ReporterExtractor(object):
     def _create_taxonomy(self):
         """ Create a new taxonomy from the data files.
         """
-#         location = os.path.dirname(os.path.realpath(sys.argv[0]))
         if not self.__has_taxonomy:
-            self._add_category(file_name='data/reported_verbs.txt',
+            reported_verbs_file = os.path.join(this_dir, "data", "reported_verbs.txt")
+            self._add_category(file_name=reported_verbs_file,
                                tag='RPTVRB')
-            self._add_category(file_name='data/sources.txt',
+            sources_file = os.path.join(this_dir, "data", "sources.txt")
+            self._add_category(file_name=sources_file,
                                tag='SOURCE')
-            self._add_category(file_name='data/locations.txt',
-                               tag='LOCATION')
+            locations_file = os.path.join(this_dir, "data", "locations.txt")
+            self._add_category(file_name=locations_file,
+                               tag='LOCATION')            
+            # self._add_category(file_name='data/reported_verbs.txt',
+            #                    tag='RPTVRB')
+            # self._add_category(file_name='data/sources.txt',
+            #                    tag='SOURCE')
+            # self._add_category(file_name='data/locations.txt',
+            #                    tag='LOCATION')
             self.__has_taxonomy = True
 
     def _add_category(self, file_name, tag):
@@ -153,7 +166,6 @@ class ReporterExtractor(object):
             for w2 in remain:
                 if w1 in w2:
                     repeated = True
-#                     print(f"{w1} está duplicado!")
             if not repeated:
                 new_name_list.append(w1)
         new_name_list = list(set(new_name_list))
@@ -185,8 +197,8 @@ class Entities(object):
     """
 
     def __init__(self):
-#         location = os.path.dirname(os.path.realpath(sys.argv[0]))
-        with open('data/entities.csv') as csvfile:
+        csvfile_name = os.path.join(this_dir, "data", "entities.csv")
+        with open(csvfile_name) as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
             self._entities_dict = {row['Entity'].lower():row
                                    for row in reader}
@@ -251,14 +263,22 @@ class SpacyReporterExtractor(object):
     def _create_taxonomy(self):
         """ Create a new taxonomy from the data files.
         """
-#         location = os.path.dirname(os.path.realpath(sys.argv[0]))
         if not self.__has_taxonomy:
-            self._add_category(file_name='data/reported_verbs.txt',
+            reported_verbs_file = os.path.join(this_dir, "data", "reported_verbs.txt")
+            self._add_category(file_name=reported_verbs_file,
                                tag='RPTVRB')
-            self._add_category(file_name='data/sources.txt',
+            sources_file = os.path.join(this_dir, "data", "sources.txt")
+            self._add_category(file_name=sources_file,
                                tag='SOURCE')
-            self._add_category(file_name='data/locations.txt',
-                               tag='LOCATION')
+            locations_file = os.path.join(this_dir, "data", "locations.txt")
+            self._add_category(file_name=locations_file,
+                               tag='LOCATION') 
+            # self._add_category(file_name='data/reported_verbs.txt',
+            #                    tag='RPTVRB')
+            # self._add_category(file_name='data/sources.txt',
+            #                    tag='SOURCE')
+            # self._add_category(file_name='data/locations.txt',
+            #                    tag='LOCATION')
             self.__has_taxonomy = True
 
     def _add_category(self, file_name, tag):
@@ -360,7 +380,6 @@ class SpacyReporterExtractor(object):
             for w2 in remain:
                 if w1 in w2:
                     repeated = True
-#                     print(f"{w1} está duplicado!")
             if not repeated:
                 new_name_list.append(w1)
         new_name_list = list(set(new_name_list))
@@ -394,8 +413,8 @@ class Entities(object):
     """
 
     def __init__(self):
-#         location = os.path.dirname(os.path.realpath(sys.argv[0]))
-        with open('data/entities.csv') as csvfile:
+        csvfile_name = os.path.join(this_dir, "data", "entities.csv")
+        with open(csvfile_name) as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
             self._entities_dict = {row['Entity'].lower():row
                                    for row in reader}

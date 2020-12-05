@@ -1,0 +1,1 @@
+from etiquetador_noticias.analyser.analyser import *

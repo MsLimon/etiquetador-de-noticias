@@ -1,1 +1,0 @@
-from tjtool.tjtool import *
