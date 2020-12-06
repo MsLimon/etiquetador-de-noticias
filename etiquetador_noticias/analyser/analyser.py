@@ -1,7 +1,5 @@
 import os
 import spacy
-from spacy import displacy
-from collections import Counter
 import es_core_news_md
 import nltk
 nltk.download('punkt')
@@ -13,11 +11,11 @@ import re
 from bs4 import BeautifulSoup
 from etiquetador_noticias.tjtool import ReporterExtractor, SpacyReporterExtractor, Entities
 
+# THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 this_dir, this_filename = os.path.split(__file__)
 
 class Analyser():
     """Auditor de transparencia informativa en medios digitales
-
 
     Parameters
     ----------
@@ -32,14 +30,15 @@ class Analyser():
     Examples
     --------
     >>> from etiquetador_noticias.analyser import Analyser
-    >>> url = "https://www.article_url"
+    >>> url = "https://www.news_article_url"
     >>> Analyser(url)
     """
     __has_data = False # to avoid load the data once and again
+
     def __init__(self, url, variant="seria"):
         # inputs
         self.url = url
-        if not isinstance(variant, str):
+        if not isinstance(variant, str) or variant not in ["seria","gamberra"]:
             raise TypeError("""The parameter 'variant' of the tree must be a string containing 
                 the name of the  desired variant. Allowed values are "seria" or "gamberra".""")
         self.variant = variant
@@ -143,15 +142,20 @@ class Analyser():
             
 
     def get_category(self):
-        # si tiene publicidad explicita es publicidad
+        # si tiene patrocinio explicito...
         if self.pat:
-            # si tiene un indicador de patrocinio y contiene publicidad en el texto es publicidad
-            if self.pub_text:
+            # variante seria
+            if self.variant == "seria":
+                # si contiene publicidad en el texto es publicidad
+                if self.pub_text:
+                    self.category = "Publicidad"
+                # si no contiene publicidad en el texto es contenido patrocinado
+                else:
+                    self.category = "Contenido Patrocinado"
+            # variante gamberra: si tiene patrocinio es publicidad
+            else:    
                 self.category = "Publicidad"
-            # si tiene un indicador de patrocinio y no contiene publicidad en el texto es contenido patrocinado
-            else:
-                self.category = "Contenido Patrocinado"
-        # si no tiene publicidad explicita....
+        # si no tiene patrocinio explicito...
         else:
             if self.num_total_sources > 2:
                 # si tiene más de dos fuentes pero habla de un inversor o gran anunciante es publicidad encubierta
@@ -170,31 +174,7 @@ class Analyser():
                     
         return self.category
                 
-#     def get_category(self):
-#         # si tiene publicidad explicita es publicidad
-#         if self.pat:
-#             self.category = "Publicidad"
-#         # si no tiene publicidad explicita....
-#         else:
-#             if self.num_total_sources > 2:
-#                 # si tiene más de dos fuentes pero habla de un inversor o gran anunciante es publicidad encubierta
-#                 if self.pub_text:
-#                     self.category = "Publicidad Encubierta"
-#                 # si tiene más de dos fuentes pero NO habla de un inversor o gran anunciante es información
-#                 else:
-#                     self.category = "Información"
-#             else:
-#                 # si tiene menos de dos fuentes pero habla de un inversor o gran anunciante es publicidad encubierta
-#                 if self.pub_text:
-#                     self.category = "Publicidad Encubierta"
-#                 # si tiene menos de dos fuentes pero NO habla de un inversor o gran anunciante es contenido parcial
-#                 else:
-#                     self.category = "Contenido Parcial"
-                    
-#         return self.category
-                
-    
-    
+       
     def full_report(self):
         print("------------------------FULL REPORT---------------------\n")
         date = self.article.publish_date.strftime("%d-%m-%Y %H:%M:%S")
